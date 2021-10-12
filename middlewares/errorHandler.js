@@ -52,7 +52,9 @@ function errorHandler(err, req, res, next) {
     default:
       res
         .status(httpStatusCode.INTERNAL_SERVER_ERROR)
-        .createResponse(httpStatusCode.INTERNAL_SERVER_ERROR, err, {});
+        .json(
+          createResponse(httpStatusCode.INTERNAL_SERVER_ERROR, err.message, {})
+        );
       break;
   }
 }

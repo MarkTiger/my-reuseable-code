@@ -11,20 +11,40 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
       // data-callback takes precedence over data-login_uri
-      function handle_google_signin(e) {
-        for (let i in e) {
-          console.log(i);
-          console.log(e[i]);
-        }
+      function handle_google_signin(response) {
+        (async () => {
+          const serverResponse = await fetch(
+            'http://localhost:3000/api/v1/google',
+            {
+              method: 'post',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ credential: response.credential }),
+            }
+          );
+          const data = await serverResponse.json();
+          console.log(data);
+          document.cookie = 'sid=true; path=/';
+        })();
       }
     </script>
     <div
       id="g_id_onload"
       data-client_id="439353409036-732353rj9n7utpg8uaostb71uborv2am.apps.googleusercontent.com"
-      data-login_uri="http://localhost:3000/google"
+      data-login_uri="http://localhost:3000/api/v1/google"
+      data-callback="handle_google_signin"
       data-auto_prompt="true"
+      data-auto_select="true"
+      data-skip_prompt_cookie="sid"
     >
-      <!-- Set to true to enable google one tap -->
+      <!-- Explanation
+        ? data-auto_prompt : set to true to enable one tap sign in
+        ? data-auto_select : set to true to ebale automatic sign in
+        ? data-callback : return credential to callback function
+        ? data-login_uri : send credential to login uri
+        ? data-skip_prompt_cookie : don't show prompt if cookie is set/exists -->
     </div>
     <div
       class="g_id_signin"
@@ -35,5 +55,14 @@
       data-shape="rectangular"
       data-logo_alignment="left"
     ></div>
+    <div class="g_id_signout"><button id="logout">Sign out</button></div>
+    <script>
+      const logout_btn = document.querySelector('#logout');
+      logout_btn.addEventListener('click', () => {
+        console.log('logging out');
+        document.cookie =
+          'sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/www;';
+      });
+    </script>
   </body>
 </html>

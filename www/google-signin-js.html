@@ -10,39 +10,58 @@
     <h1>Hello world</h1>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-      function handleCredentialResponse(response) {
-        console.log("Encoded JWT ID token: " + response.credential);
-        (async (r) => {
-          console.log('Hello world')
-          const response = await fetch('https://newromantimes.herokuapp.com/users/google', {
-            method: 'post',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              idToken: r.credential
-            })
-          })
-
-          const data = await response.json()
-          console.log(data)
-        })(response)
+      // data-callback takes precedence over data-login_uri
+      function handle_google_signin(response) {
+        (async () => {
+          const serverResponse = await fetch(
+            'http://localhost:3000/api/v1/google',
+            {
+              method: 'post',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ credential: response.credential }),
+            }
+          );
+          const data = await serverResponse.json();
+          console.log(data);
+          document.cookie = 'sid=true; path=/';
+        })();
       }
-      window.onload = function () {
-        google.accounts.id.initialize({
-          client_id: "439353409036-732353rj9n7utpg8uaostb71uborv2am.apps.googleusercontent.com",
-          callback: handleCredentialResponse
-        });
-        google.accounts.id.renderButton(
-          document.getElementById("buttonDiv"),
-          { theme: "outline", size: "large" }  // customization attributes
-        );
-        google.accounts.id.prompt(); // also display the One Tap dialog
-      }
-  </script>
-  <div id="buttonDiv"></div>
-  </div>
-
+    </script>
+    <div
+      id="g_id_onload"
+      data-client_id="439353409036-732353rj9n7utpg8uaostb71uborv2am.apps.googleusercontent.com"
+      data-login_uri="http://localhost:3000/api/v1/google"
+      data-callback="handle_google_signin"
+      data-auto_prompt="true"
+      data-auto_select="true"
+    >
+      <!-- Explanation
+        ? data-auto_prompt : set to true to enable one tap sign in
+        ? data-auto_select : set to true to ebale automatic sign in
+        ? data-callback : return credential to callback function
+        ? data-login_uri : send credential to login uri
+        ? data-skip_prompt_cookie : don't show prompt if cookie is set/exists -->
+    </div>
+    <div
+      class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left"
+    ></div>
+    <div class="g_id_signout"><button id="logout">Sign out</button></div>
+    <script>
+      const logout_btn = document.querySelector('#logout');
+      logout_btn.addEventListener('click', () => {
+        console.log('logging out');
+        document.cookie =
+          'sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      });
+    </script>
   </body>
 </html>
